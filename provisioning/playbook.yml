@@ -1,0 +1,22 @@
+---
+# WMG SSH Weak Password Attack - CyberRangeCZ provisioning
+#
+# Configures the two-host sandbox defined in topology.yml:
+#   * server   - the vulnerable Ubuntu/Debian target (weak SSH account + flag)
+#   * attacker - the Kali workstation the student works from (tools + wordlist)
+#
+# Both plays are role based and idempotent: a second run reports changed=0.
+
+# Configure the vulnerable SSH target
+- name: Configure the vulnerable SSH server
+  hosts: server
+  become: yes
+  roles:
+    - server
+
+# Configure the Kali attacker workstation
+- name: Configure the Kali attacker workstation
+  hosts: attacker
+  become: yes
+  roles:
+    - attacker

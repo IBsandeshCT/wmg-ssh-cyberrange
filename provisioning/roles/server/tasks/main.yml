@@ -1,0 +1,44 @@
+---
+# Deploy the SSH Weak Password Attack scenario on the target server.
+#
+# Creates an intentionally weak SSH account ("student" / "password123"),
+# a supporting wordlist, and a flag that is only readable once an attacker
+# has actually authenticated as that account.
+
+- name: Ensure sshd allows password authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication yes'
+  notify: Restart ssh
+
+- name: Create low-privilege 'student' account with a common, weak password
+  ansible.builtin.user:
+    name: "{{ student_user }}"
+    password: "{{ student_password | password_hash('sha512', student_password_salt) }}"
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Deploy the common-password wordlist used for brute forcing
+  ansible.builtin.copy:
+    src: wordlist.txt
+    dest: "/home/{{ student_user }}/wordlist.txt"
+    owner: "{{ student_user }}"
+    group: "{{ student_user }}"
+    mode: '0644'
+
+- name: Plant the flag in student's home directory
+  ansible.builtin.copy:
+    content: "{{ flag_content }}\n"
+    dest: "/home/{{ student_user }}/flag.txt"
+    owner: "{{ student_user }}"
+    group: "{{ student_user }}"
+    mode: '0600'
+
+- name: Restrict student's home directory to the account owner only
+  ansible.builtin.file:
+    path: "/home/{{ student_user }}"
+    owner: "{{ student_user }}"
+    group: "{{ student_user }}"
+    mode: '0700'

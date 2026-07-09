@@ -1,0 +1,50 @@
+name: wmg-ssh-weak-password-sandbox
+
+hosts:
+  - name: attacker
+    base_box:
+      image: kypo-kali-v2
+      mgmt_user: kali
+    flavor: c2.r4gb.d25gb.swap
+    volumes:
+      - size: 25
+
+  - name: server
+    hidden: false
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: c1.r2gb.d10gb
+    volumes:
+      - size: 10
+
+routers:
+  - name: router
+    base_box:
+      image: debian-12-x86_64
+      mgmt_user: debian
+    flavor: c1.r2gb.d10gb
+
+wan:
+  name: internet-connection
+  cidr: 100.100.100.0/24
+
+networks:
+  - name: wmg-switch
+    cidr: 10.1.27.0/24
+
+net_mappings:
+    - host: attacker
+      network: wmg-switch
+      ip: 10.1.27.23
+
+    - host: server
+      network: wmg-switch
+      ip: 10.1.27.10
+
+router_mappings:
+    - router: router
+      network: wmg-switch
+      ip: 10.1.27.1
+
+groups: []

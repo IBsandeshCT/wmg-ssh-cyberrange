@@ -1,0 +1,11 @@
+---
+# Weak SSH account the student will brute force.
+student_user: student
+student_password: password123
+
+# Fixed salt so password_hash() is deterministic and the play stays idempotent
+# (a re-run reports changed=0 instead of rehashing with a new random salt).
+student_password_salt: wmgsshsalt01234
+
+# Flag revealed only after authenticating as 'student'.
+flag_content: "WMG{ssh_w3ak_p4ssw0rds_are_never_ok}"

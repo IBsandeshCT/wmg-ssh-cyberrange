@@ -1,0 +1,3 @@
+---
+# Management/login user for the Kali attacker box (matches topology mgmt_user).
+attacker_user: kali

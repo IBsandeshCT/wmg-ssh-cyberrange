@@ -1,0 +1,6 @@
+---
+# No external Ansible Galaxy roles or collections are required for this game.
+# All configuration is performed by the local 'server' and 'attacker' roles
+# using modules from ansible.builtin only.
+roles: []
+collections: []
