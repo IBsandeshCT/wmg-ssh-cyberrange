@@ -1,8 +1,8 @@
 {
   "title" : "WMG SSH Weak Password Attack",
-  "description" : "Learn how attackers exploit weak SSH passwords using dictionary attacks",
-  "prerequisites" : [ ],
-  "outcomes" : [ "Understand how weak passwords enable brute-force attacks", "Learn to use Hydra for SSH dictionary attacks", "Understand SSH hardening techniques" ],
+  "description" : "Step into the role of a junior penetration tester at WMG and prove that a weak SSH password on an internal server can be found, cracked and used to gain access -- then learn how to stop it.",
+  "prerequisites" : [ "Basic familiarity with the Linux command line", "Understanding of what SSH is used for" ],
+  "outcomes" : [ "You will learn how to scan a server for open services with nmap", "You will learn how to run an SSH dictionary attack with hydra", "You will understand why weak passwords are dangerous and how to defend against brute-force attacks" ],
   "state" : "UNRELEASED",
   "show_stepper_bar" : true,
   "levels" : [ {
@@ -10,110 +10,164 @@
     "level_type" : "INFO_LEVEL",
     "order" : 0,
     "estimated_duration" : 0,
-    "content" : "# General information: please read carefully\n\n* The solution of a level **will be required** in the further levels. Do not try to skip ahead. If you reveal a solution to the level, complete all the steps, you will need them later.\n* If you get stuck during the game, feel free to use Google.\n* This game is for educational purposes only. Unauthorized use of the tools that are incorporated into the game is illegal. The story is fictitious.\n\n# Storyline intro\n\nWelcome to WMG! You have just joined the security team at Warwick Manufacturing Group as a junior security analyst, and today you get your first real assignment.\n\nLast week the sysadmin was in a hurry. A new summer intern was starting, so a fresh account was provisioned on one of the internal servers to get them up and running quickly. \"I'll tighten it up later,\" the sysadmin said -- and, as always, \"later\" never came.\n\nYour manager wants you to find out whether that shortcut left a hole big enough to walk through. Your job is to test the security of that internal server the same way a real attacker would: from the outside, with nothing but a Kali Linux workstation and your wits. If a weak password really did slip through, you need to prove it before someone with worse intentions does.\n\nThe target sits at `10.1.27.10`. Your Kali attack box is at `10.1.27.23`. Time to get to work."
+    "content" : "# General information: please read carefully\n\n* The solution of a level **will be required** in the further levels. Do not try to skip ahead. If you reveal the solution to a level, complete all of the steps anyway -- you will need the result later on.\n* If you get stuck during the game, feel free to use Google or the built-in `--help` of any tool.\n* This game is for educational purposes only. Unauthorized use of the tools incorporated into this game is illegal. The story is fictitious, and every action you take stays inside the isolated training sandbox.\n\n# Storyline: The Intern's Account\n\nWelcome to Warwick Manufacturing Group. It is your first Monday as a junior penetration tester on the WMG security team, and the coffee has barely gone cold before your manager drops a ticket on your desk.\n\n\"We think we have a problem,\" she says. \"Last week the sysadmin was buried under a mountain of work. A new summer intern was starting, and the sysadmin needed to get them productive fast, so a fresh account was thrown together on one of our internal servers. You know how it goes -- *'I'll set a proper password later.'* Later never happened. Now the security team is nervous that account is a wide-open door, and I need someone to find out before somebody outside these walls does.\"\n\nShe slides a Kali Linux workstation across the desk. Kali is the penetration tester's toolkit of choice: it ships with everything you need for a job like this. `nmap` will map out which services the server is exposing. `hydra` will hammer a login with a list of common passwords until one sticks. `ssh` will let you walk through the door once you have the key. A wordlist of the passwords people lazily reuse -- `password`, `qwerty`, `letmein`, and hundreds more -- is already waiting in your home directory.\n\nYour mission, should you accept it (and you already have -- you signed the engagement letter), is to think like an attacker. You will approach the target from the outside, with no inside knowledge beyond a rumour about a hastily created intern account. First you will confirm the server is reachable and find out what it is running. Then you will work out who to target. Then you will crack the password, log in, and recover the proof: a flag file that only the account owner can read.\n\nThe target sits at `10.1.27.10`. Your Kali attack box is at `10.1.27.23`. Stay inside the sandbox, trust your tools, and prove the hole is real.\n\nGood luck, analyst. The clock is running."
   }, {
     "title" : "Get Access",
     "level_type" : "ACCESS_LEVEL",
     "order" : 1,
     "estimated_duration" : 2,
     "passkey" : "start",
-    "cloud_content" : "# Connect to your attacker machine\n\nYou will be working from a **Kali Linux** attacker machine located at `10.1.27.23`.\n\nOpen a terminal and connect to it over SSH using the credentials provided to you by the training platform (shown in the sandbox access details):\n\n```\nssh <username>@10.1.27.23\n```\n\nOnce you are logged in, you have everything you need: Kali ships with `nmap`, `hydra`, `ssh` and a wordlist has been placed in your home directory at `/home/kali/wordlist.txt`.\n\nYour target for this engagement is the internal server at `10.1.27.10`. Do **not** scan or attack anything outside this sandbox.\n\nWhen you are connected and ready, submit the passkey **`start`** to continue.",
-    "local_content" : "You will be working from a Kali Linux attacker machine at `10.1.27.23`. Open a terminal on it. The target server is at `10.1.27.10`. When ready, submit the passkey `start` to continue."
+    "cloud_content" : "# Connect to your attacker machine\n\nYou will run this entire engagement from a **Kali Linux** attacker machine located at `10.1.27.23`.\n\nOpen a terminal and connect to it over SSH using the credentials provided by the training platform (they are shown in the sandbox access details):\n\n```\nssh <username>@10.1.27.23\n```\n\nOnce you are logged in you have everything you need. Kali ships with `nmap`, `hydra` and `ssh`, and a wordlist of common passwords has already been placed in your home directory at `/home/kali/wordlist.txt`.\n\nYour one and only target for this engagement is the internal server at `10.1.27.10`. Do **not** scan, probe or attack anything outside this sandbox -- doing so is both against the rules of engagement and, in the real world, illegal.\n\nWhen you are connected to the Kali machine and ready to begin, submit the passkey **`start`** to continue.",
+    "local_content" : "You will be working from a Kali Linux attacker machine at `10.1.27.23`. Open a terminal on it. Your target server is the internal machine at `10.1.27.10`, and a wordlist has been placed at `/home/kali/wordlist.txt`. Do not attack anything outside the sandbox. When you are ready, submit the passkey `start` to continue."
   }, {
-    "title" : "Discover the Target",
+    "title" : "Reconnaissance -- Is SSH Running?",
     "level_type" : "TRAINING_LEVEL",
     "order" : 2,
     "estimated_duration" : 5,
     "answer" : "22",
     "answer_variable_name" : null,
-    "content" : "Before you can attack a service, you need to know it is actually there. From your Kali machine, scan the target server at `10.1.27.10` and identify which services it is exposing.\n\nYou are specifically looking for the remote-login service you will use to get onto the box. Find the port it is listening on.\n\nThe flag for this level is the port number on which the SSH service is running on the target server.",
-    "solution" : "```\nkali@attacker:~$ nmap 10.1.27.10\n\nPORT   STATE SERVICE\n22/tcp open  ssh\n```\n\nSSH is running on port `22`.",
-    "solution_penalized" : true,
+    "content" : "Every engagement begins with reconnaissance. Before you can attack a service, you have to prove it is actually there -- attacking a port that is closed just wastes your time and makes noise for nothing.\n\nYour manager's ticket mentions a login account, which means the server almost certainly exposes a remote-login service. On Linux machines that service is nearly always **SSH** (Secure Shell). From your Kali machine, scan the target at `10.1.27.10` and find out which ports are open and what is listening on them.\n\nLook carefully through the scan output for the line describing the remote-login service. You need the port it is listening on.\n\nThe flag for this level is the port number on which the SSH service is running on the target server.",
+    "solution" : "Scan the target with `nmap`:\n\n```\nkali@attacker:~$ nmap 10.1.27.10\n\nStarting Nmap ( https://nmap.org )\nNmap scan report for 10.1.27.10\nHost is up.\n\nPORT   STATE SERVICE\n22/tcp open  ssh\n```\n\nThe `ssh` service is listening on port `22`, so the flag is **22**.",
+    "solution_penalized" : false,
     "hints" : [ {
-      "title" : "How do I scan the target?",
-      "content" : "Use the command-line tool `nmap` to scan the target for open ports and services.",
+      "title" : "Which tool?",
+      "content" : "Nmap is the industry-standard network scanner. It shows open ports and the services running behind them.",
       "hint_penalty" : 2,
       "order" : 0
     }, {
-      "title" : "What is the exact command?",
+      "title" : "Basic syntax",
       "content" : "Try: `nmap 10.1.27.10`",
       "hint_penalty" : 4,
       "order" : 1
+    }, {
+      "title" : "What to look for",
+      "content" : "Look for a line containing `ssh` in the output. The number before `/tcp` on that line is the port you want.",
+      "hint_penalty" : 6,
+      "order" : 2
     } ],
     "incorrect_answer_limit" : 10,
     "attachments" : [ ],
-    "max_score" : 15,
-    "reference_solution" : [ ],
+    "max_score" : 10,
+    "reference_solution" : [ {
+      "state_name" : "ssh_port_found",
+      "prereq_state" : [ ],
+      "cmd" : "nmap 10.1.27.10",
+      "cmd_type" : "bash-command",
+      "cmd_regex" : "nmap 10.1.27.10",
+      "optional" : false
+    } ],
     "mitre_techniques" : [ {
       "technique_key" : "TA0007.T1046"
     } ],
     "expected_commands" : [ "nmap" ]
   }, {
-    "title" : "Brute Force SSH Credentials",
+    "title" : "Intelligence -- Who is the Target User?",
     "level_type" : "TRAINING_LEVEL",
     "order" : 3,
+    "estimated_duration" : 4,
+    "answer" : "student",
+    "answer_variable_name" : null,
+    "content" : "You have confirmed SSH is alive on port `22`. But a login attack needs two things: a password *and* a username. Hammering the login with the wrong username will get you nowhere no matter how good your wordlist is, so a smart attacker gathers intelligence first.\n\nGo back to the briefing. Your manager told you the account at the heart of this engagement was hurriedly provisioned for a **new summer intern**. Sysadmins under pressure rarely invent creative usernames -- they reach for the obvious one that describes the person's role. Think about what a WMG IT department would most naturally call a temporary training account for someone who has just arrived to learn.\n\nThe flag for this level is the username you will target in the attack.",
+    "solution" : "This level is about deduction, not a command. The briefing describes the account as one created for a **new summer intern** -- someone who has arrived to learn. A rushed sysadmin would give such a temporary, role-based account the most obvious possible name. The username is **student**.\n\nYou will use this username in the next level as the `-l` argument to `hydra`.",
+    "solution_penalized" : true,
+    "hints" : [ {
+      "title" : "Think about it",
+      "content" : "What username would an IT department give to a brand-new intern who has arrived to learn? Re-read the briefing -- the answer is a single, common word.",
+      "hint_penalty" : 2,
+      "order" : 0
+    }, {
+      "title" : "Common naming conventions",
+      "content" : "Most sysadmins name an account after the person's role rather than inventing something clever. For someone here to learn, the role is very straightforward.",
+      "hint_penalty" : 5,
+      "order" : 1
+    } ],
+    "incorrect_answer_limit" : 10,
+    "attachments" : [ ],
+    "max_score" : 10,
+    "reference_solution" : [ ]
+  }, {
+    "title" : "Attack -- Brute Force the Password",
+    "level_type" : "TRAINING_LEVEL",
+    "order" : 4,
     "estimated_duration" : 8,
     "answer" : "password123",
     "answer_variable_name" : null,
-    "content" : "Good work -- SSH is running on port `22`. You suspect the intern's account has a weak password, but you do not know what it is yet, and guessing one attempt at a time would take forever.\n\nInstead, run a dictionary attack. A wordlist of common passwords has already been placed on your Kali machine at `/home/kali/wordlist.txt`. Use `hydra` to try each password in that list against the `student` account over SSH until one works.\n\nThe flag for this level is the password you recover for the `student` account.",
-    "solution" : "```\nkali@attacker:~$ hydra -l student -P /home/kali/wordlist.txt ssh://10.1.27.10\n\n[22][ssh] host: 10.1.27.10   login: student   password: password123\n1 of 1 target successfully completed, 1 valid password found\n```\n\nThe recovered password is `password123`.",
+    "content" : "You now have everything you need to launch the attack: the service (`SSH` on port `22`), the target (`10.1.27.10`) and the username (`student`). The only thing missing is the password -- and guessing one attempt at a time by hand would take forever.\n\nInstead, automate it with a **dictionary attack**. A wordlist of common, lazy passwords has already been placed on your Kali machine at `/home/kali/wordlist.txt`. Use `hydra` to try every password in that list against the `student` account over SSH until one of them lets you in.\n\nWatch the output: when hydra finds a match it will print the host, the login and the password on a single line.\n\nThe flag for this level is the password you recover for the `student` account.",
+    "solution" : "Run a dictionary attack against the `student` account over SSH using the supplied wordlist:\n\n```\nkali@attacker:~$ hydra -l student -P /home/kali/wordlist.txt ssh://10.1.27.10\n\nHydra starting...\n[DATA] attacking ssh://10.1.27.10:22/\n[22][ssh] host: 10.1.27.10   login: student   password: password123\n1 of 1 target successfully completed, 1 valid password found\n```\n\nHydra tried each password from the wordlist and found a match. The recovered password is **password123**.",
     "solution_penalized" : true,
     "hints" : [ {
-      "title" : "Which tool brute forces SSH?",
-      "content" : "Hydra can brute force SSH logins. The general syntax is `hydra -l <user> -P <wordlist> ssh://<target>`.",
+      "title" : "Which tool?",
+      "content" : "Hydra is a fast password-cracking tool that supports SSH, and it is already installed on Kali.",
       "hint_penalty" : 3,
       "order" : 0
     }, {
-      "title" : "What user and wordlist do I use?",
-      "content" : "The username is `student`. The wordlist is at `/home/kali/wordlist.txt`.",
+      "title" : "Hydra syntax",
+      "content" : "The general form is `hydra -l <username> -P <wordlist> ssh://<target>`. Use `-l` for a single known username and `-P` for the wordlist file.",
       "hint_penalty" : 5,
       "order" : 1
     }, {
-      "title" : "Give me the full command",
-      "content" : "Full command: `hydra -l student -P /home/kali/wordlist.txt ssh://10.1.27.10`",
+      "title" : "Full command",
+      "content" : "`hydra -l student -P /home/kali/wordlist.txt ssh://10.1.27.10`",
       "hint_penalty" : 8,
       "order" : 2
     } ],
     "incorrect_answer_limit" : 10,
     "attachments" : [ ],
     "max_score" : 25,
-    "reference_solution" : [ ],
+    "reference_solution" : [ {
+      "state_name" : "password_cracked",
+      "prereq_state" : [ "ssh_port_found" ],
+      "cmd" : "hydra -l student -P /home/kali/wordlist.txt ssh://10.1.27.10",
+      "cmd_type" : "bash-command",
+      "cmd_regex" : "hydra -l student -P .*wordlist.txt ssh://10.1.27.10",
+      "optional" : false
+    } ],
     "mitre_techniques" : [ {
       "technique_key" : "TA0006.T1110"
     } ],
     "expected_commands" : [ "hydra" ]
   }, {
-    "title" : "Retrieve the Flag",
+    "title" : "Access -- Log In and Retrieve the Flag",
     "level_type" : "TRAINING_LEVEL",
-    "order" : 4,
-    "estimated_duration" : 5,
+    "order" : 5,
+    "estimated_duration" : 6,
     "answer" : "WMG{ssh_w3ak_p4ssw0rds_are_never_ok}",
     "answer_variable_name" : null,
-    "content" : "You now have valid credentials: `student` / `password123`. Time to prove the access is real.\n\nLog in to the target server at `10.1.27.10` as the `student` user using the password you recovered. Once you are on the box, look around the account's home directory and read the flag that is waiting for you there.\n\nThe flag for this level is the contents of the flag file.",
-    "solution" : "```\nkali@attacker:~$ ssh student@10.1.27.10\nstudent@10.1.27.10's password: password123\n\nstudent@server:~$ ls\nflag.txt  wordlist.txt\n\nstudent@server:~$ cat flag.txt\nWMG{ssh_w3ak_p4ssw0rds_are_never_ok}\n```",
+    "content" : "This is the moment that turns a theory into proof. You have valid credentials -- `student` / `password123` -- recovered by cracking a weak password from the outside. Now use them.\n\nLog in to the target server at `10.1.27.10` as the `student` user with the password you just cracked. Accept the host key if SSH asks about it, and enter the password when prompted. Once you land on the box, look around the account's home directory: there is a flag file waiting for you that only the `student` user is allowed to read -- which is exactly why gaining this account mattered.\n\nRead that file and submit its contents. This is the evidence your manager needs.\n\nThe flag for this level is the contents of the flag file.",
+    "solution" : "Log in with the cracked credentials and read the flag from the home directory:\n\n```\nkali@attacker:~$ ssh student@10.1.27.10\nThe authenticity of host '10.1.27.10' can't be established.\nAre you sure you want to continue connecting (yes/no/[fingerprint])? yes\nstudent@10.1.27.10's password: password123\n\nstudent@server:~$ ls\nflag.txt  wordlist.txt\n\nstudent@server:~$ cat flag.txt\nWMG{ssh_w3ak_p4ssw0rds_are_never_ok}\n```\n\nThe flag is **WMG{ssh_w3ak_p4ssw0rds_are_never_ok}**. You have proven that a weak password gave a total stranger a real shell on an internal server.",
     "solution_penalized" : true,
     "hints" : [ {
-      "title" : "How do I log in?",
-      "content" : "Use `ssh student@10.1.27.10` with the password you found in the previous level.",
+      "title" : "SSH syntax",
+      "content" : "`ssh username@hostname` -- use the `student` username and the password you cracked in the previous level. Answer `yes` if it asks about the host authenticity.",
       "hint_penalty" : 3,
       "order" : 0
     }, {
-      "title" : "Where is the flag?",
-      "content" : "Once logged in, look in the home directory: run `ls` and then `cat flag.txt`.",
+      "title" : "Finding the flag",
+      "content" : "Once you are logged in, run `ls` to see the files in the home directory, then `cat flag.txt` to read the flag.",
       "hint_penalty" : 5,
       "order" : 1
     } ],
     "incorrect_answer_limit" : 10,
     "attachments" : [ ],
     "max_score" : 30,
-    "reference_solution" : [ ],
+    "reference_solution" : [ {
+      "state_name" : "logged_in",
+      "prereq_state" : [ "password_cracked" ],
+      "cmd" : "ssh student@10.1.27.10",
+      "cmd_type" : "bash-command",
+      "cmd_regex" : "ssh student@10.1.27.10",
+      "optional" : false
+    } ],
+    "mitre_techniques" : [ {
+      "technique_key" : "TA0008.T1021"
+    } ],
     "expected_commands" : [ "ssh", "cat" ]
   }, {
-    "title" : "Knowledge Check",
+    "title" : "Debrief -- What Did You Learn?",
     "level_type" : "ASSESSMENT_LEVEL",
-    "order" : 5,
+    "order" : 6,
     "estimated_duration" : 5,
-    "instructions" : "Answer the following questions to check your understanding of the attack you just performed and how to defend against it.",
+    "instructions" : "Answer these questions to demonstrate your understanding of the attack you just performed and how a defender would stop it.",
     "assessment_type" : "QUESTIONNAIRE",
     "questions" : [ {
       "answer_required" : true,
@@ -121,22 +175,22 @@
       "points" : 0,
       "penalty" : 0,
       "question_type" : "MCQ",
-      "text" : "What type of attack did you perform?",
+      "text" : "What does nmap do?",
       "choices" : [ {
         "order" : 0,
-        "text" : "Dictionary attack",
-        "correct" : true
-      }, {
-        "order" : 1,
-        "text" : "Brute force",
+        "text" : "Cracks passwords",
         "correct" : false
       }, {
+        "order" : 1,
+        "text" : "Scans networks for open ports and services",
+        "correct" : true
+      }, {
         "order" : 2,
-        "text" : "SQL injection",
+        "text" : "Encrypts network traffic",
         "correct" : false
       }, {
         "order" : 3,
-        "text" : "Phishing",
+        "text" : "Monitors system logs",
         "correct" : false
       } ]
     }, {
@@ -145,22 +199,22 @@
       "points" : 0,
       "penalty" : 0,
       "question_type" : "MCQ",
-      "text" : "Which tool did you use to crack the password?",
+      "text" : "Why was the password easy to crack?",
       "choices" : [ {
         "order" : 0,
-        "text" : "nmap",
+        "text" : "The server was offline",
         "correct" : false
       }, {
         "order" : 1,
-        "text" : "hydra",
-        "correct" : true
-      }, {
-        "order" : 2,
-        "text" : "metasploit",
+        "text" : "SSH was disabled",
         "correct" : false
       }, {
+        "order" : 2,
+        "text" : "The password appeared in a common wordlist",
+        "correct" : true
+      }, {
         "order" : 3,
-        "text" : "burpsuite",
+        "text" : "The firewall was misconfigured",
         "correct" : false
       } ]
     }, {
@@ -169,26 +223,57 @@
       "points" : 0,
       "penalty" : 0,
       "question_type" : "MCQ",
-      "text" : "What is the most effective defence against this attack?",
+      "text" : "Which MITRE ATT&CK tactic does Hydra implement in this attack?",
       "choices" : [ {
         "order" : 0,
-        "text" : "Use strong passwords and SSH keys",
-        "correct" : true
-      }, {
-        "order" : 1,
-        "text" : "Install antivirus",
+        "text" : "Discovery",
         "correct" : false
       }, {
+        "order" : 1,
+        "text" : "Credential Access -- Brute Force",
+        "correct" : true
+      }, {
         "order" : 2,
-        "text" : "Use a firewall",
+        "text" : "Lateral Movement",
         "correct" : false
       }, {
         "order" : 3,
-        "text" : "Change username",
+        "text" : "Exfiltration",
         "correct" : false
       } ]
+    }, {
+      "answer_required" : true,
+      "order" : 3,
+      "points" : 0,
+      "penalty" : 0,
+      "question_type" : "MCQ",
+      "text" : "What is the most effective fix for this vulnerability?",
+      "choices" : [ {
+        "order" : 0,
+        "text" : "Install a firewall",
+        "correct" : false
+      }, {
+        "order" : 1,
+        "text" : "Disable SSH entirely",
+        "correct" : false
+      }, {
+        "order" : 2,
+        "text" : "Enforce strong passwords and use SSH key authentication",
+        "correct" : true
+      }, {
+        "order" : 3,
+        "text" : "Change the username",
+        "correct" : false
+      } ]
+    }, {
+      "answer_required" : false,
+      "order" : 4,
+      "points" : 0,
+      "penalty" : 0,
+      "question_type" : "FFQ",
+      "text" : "In one sentence, explain why 'password123' is a weak password."
     } ]
   } ],
-  "estimated_duration" : 25,
+  "estimated_duration" : 30,
   "variant_sandboxes" : false
 }
