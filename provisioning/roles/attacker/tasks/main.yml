@@ -1,16 +1,7 @@
 ---
-# Prepare the Kali attacker workstation for the SSH brute-force exercise.
+# Kali attacker workstation — no provisioning needed.
+# Kali ships with hydra, nmap, ssh and sshpass pre-installed.
+# Internet access is unavailable during CyberRangeCZ provisioning.
 
-- name: Ensure hydra is installed (present by default on Kali, verified here)
-  ansible.builtin.apt:
-    name: hydra
-    state: present
-    update_cache: yes
-
-- name: Place the common-password wordlist in kali's home directory
-  ansible.builtin.copy:
-    src: wordlist.txt
-    dest: "/home/{{ attacker_user }}/wordlist.txt"
-    owner: "{{ attacker_user }}"
-    group: "{{ attacker_user }}"
-    mode: '0644'
+- name: Confirm attacker is reachable
+  ansible.builtin.ping:
