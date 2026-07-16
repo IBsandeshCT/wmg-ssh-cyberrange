@@ -37,12 +37,12 @@
     }, {
       "title" : "Basic syntax",
       "content" : "Try: `nmap 10.1.27.10`",
-      "hint_penalty" : 4,
+      "hint_penalty" : 3,
       "order" : 1
     }, {
       "title" : "What to look for",
       "content" : "Look for a line containing `ssh` in the output. The number before `/tcp` on that line is the port you want.",
-      "hint_penalty" : 6,
+      "hint_penalty" : 4,
       "order" : 2
     } ],
     "incorrect_answer_limit" : 10,
